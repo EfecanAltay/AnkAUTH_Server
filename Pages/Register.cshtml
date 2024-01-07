@@ -1,9 +1,17 @@
 ﻿@page
 @model RegisterModel
+@using AnkaAUTH_Server.Utils;
 @{
     ViewData["Title"] = "Register";
-}
 
+    var emailClass = "form-control form-control-lg" + (Model.EmailReady ? " is-valid" : (Model.EmailInvalid ? " is-invalid":""));
+    var passwordClass = "form-control form-control-lg" + (Model.PasswordInvalid ? " is-invalid" : "");
+    var rePasswordClass = "form-control form-control-lg" + (Model.RePasswordInvalid ? " is-invalid" : "");
+
+    var validationButonString = Model.EmailReady ? "Valid" : "Check";
+
+    var fieldsetDisable = !Model.EmailReady;
+}
 
 <section class="vh-80" style="background-color: transparent;">
   <div class="container py-5 h-90">
@@ -12,40 +20,62 @@
         <div class="card" style="border-radius: 1rem;box-shadow: 0 0 10px 5px #1a5b74;">
           <div class="row g-0">
             <div class="col-md-12 col-lg-12 d-flex align-items-center">
-              <div class="card-body p-4 p-lg- text-black">
-                <form method="post">
+              <div class="card-body p-4 text-black">
+                <form id="registerForm" method="post" href="/">
                   <div class="d-flex align-items-center mb-3 pb-1">
-                    <span class="h1 fw-bold mb-0">Register</span>
+                    <span class="h1 fw-bold mb-0" >Register</span>
                   </div>
                   <h5 class="fw-normal mb-3 pb-3" style="letter-spacing: 1px;">Register for AnkAuth</h5>
-                  <div class="form-outline mb-4">
-                    <label class="form-label" for="username" >Email</label>
-                    <input type="email" id="username" name="Username" class="form-control form-control-lg" required/>
+                  <!-- Email -->
+                  <div id="emailSection" class="form-outline mb-4">
+                    <label class="form-label" for="email" >Email</label>
+                    <div class="row">
+                      <div class="col-8 col-md-8 col-lg-8">
+                        <input placeholder="Enter Email" type="email" id="email" name="Email" class="@emailClass" value="@Model.DataModel.Email"  readonly='@Model.EmailReady' required/>
+                        <div class="invalid-feedback">
+                          @Model.EmailValidation?.Replace(Environment.NewLine, "<br />")
+                        </div>
+                        <div class="valid-feedback">
+                          Email is valid
+                        </div>
+                      </div>
+                      <div class="d-grid gap-2 col-4 col-md-4 col-lg-4">
+                       <button id="checkEmailAction" type="summit" class="btn btn-outline-success" style="height:48px" asp-page-handler="EmailValidation" disabled='@Model.EmailReady'>
+                       @validationButonString?.Replace(Environment.NewLine, "<br />")
+                       </button>
+                      </div>
+                    </div>
                   </div>
-                  <div class="form-outline mb-4">
-                    <label class="form-label" for="form2Example27">Password</label>
-                    <input type="password" id="password" name="Password" class="form-control form-control-lg" required/>
-                  </div>
+                  <fieldset disabled="@fieldsetDisable">
+                    <div class="form-outline mb-4">
+                      <label class="form-label" for="form2Example27">Password</label>
+                      <input placeholder="Enter Password" type="password" id="password" name="Password" value="@Model.DataModel.Password" class="@passwordClass" required/>
+                      <div class="invalid-feedback">
+                        @Html.Raw(Html.Encode(@Model.PasswordValidation).Replace(Environment.NewLine, "<br/>"))
+                      </div>
+                    </div>
+                    <div class="form-outline mb-4">
+                      <label class="form-label" for="form2Example27">Re-Password</label>
+                      <input placeholder="Re Enter Password" type="password" id="repassword" name="RePassword" value="@Model.DataModel.RePassword" class="@rePasswordClass" required/>  
+                      <div class="invalid-feedback">
+                        @Html.Raw(Html.Encode(@Model.RePasswordValidation))
+                      </div>
+                    </div>
 
-                  <div class="form-outline mb-4">
-                    <label class="form-label" for="form2Example27">Re-Password</label>
-                    <input type="password" id="repassword" name="Password" class="form-control form-control-lg" required/>
-                  </div>
+                    <div class="form-outline mb-4">
+                      <label class="form-label" for="form2Example17">FirstName</label>
+                      <input placeholder="Enter FirstName" type="text" id="firstname" name="FirstName" class="form-control form-control-lg" value="@Model.DataModel.FirstName" required/>
+                    </div>
 
-                   <div class="form-outline mb-4">
-                    <label class="form-label" for="form2Example17">FirstName</label>
-                    <input type="email" id="firstname" name="FirstName" class="form-control form-control-lg" required/>
-                  </div>
+                    <div class="form-outline mb-4">
+                      <label class="form-label" for="form2Example17">LastName</label>
+                      <input placeholder="Enter LastName" type="text" id="lastname" name="LastName" class="form-control form-control-lg" value="@Model.DataModel.LastName" required/>
+                    </div>
 
-                   <div class="form-outline mb-4">
-                    <label class="form-label" for="form2Example17">LastName</label>
-                    <input type="email" id="lastname" name="LastName" class="form-control form-control-lg" required/>
-                  </div>
-
-                  <div class="pt-1 mb-4">
-                    <button class="btn btn-dark btn-lg btn-block" type="summit" asp-page-handler="Submit" >Register</button>
-                  </div>
-                  @ViewData["Message"]
+                    <div class="pt-1 mb-4">
+                      <button class="btn btn-dark btn-lg btn-block" type="summit" asp-page-handler="Register" disabled="@Model.IsRegisterSuccess">Register</button>
+                    </div>
+                  </fieldset>
                   <!-- <a class="small text-muted" href="#!">Forgot password?</a> -->
                   <p class="mb-5 pb-lg-2" style="color: #393f81;">I have an account? <a href="/Login"
                       style="color: #393f81;">Login Here</a></p>
@@ -60,3 +90,62 @@
     </div>
   </div>
 </section>
+
+<!-- Modal -->
+<div class="modal fade" id="messageModel" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div id="messageText" class="modal-body">
+        @Model.MessageText 
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick='@Url.Page("/Login")' class="btn btn-primary">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts
+{
+<script>
+
+
+
+$(document).ready(function () {
+
+  if(@CSHtmlHelper.GetVariable(Model.IsShowMessage)){
+  var messageModel = new bootstrap.Modal(document.getElementById('messageModel'));
+  messageModel.show();
+
+  if(@CSHtmlHelper.GetVariable(Model.IsRegisterSuccess)){
+    var redirect = setInterval(redirectCounter, 1000);
+    var redirectCount = 4;
+    function redirectCounter(){
+      if(redirectCount < 1)
+      {
+          window.location.href = '/login';
+      }
+      else{
+        redirectCount--;
+        $('#messageText').text("Kayıt Başarılıdır.\n Giriş Ekranına Yönlendiriliyorsunuz... " + redirectCount);
+      }
+    }
+  }
+}
+
+   $('#email').on("input", function () {
+        $('#email').removeClass('is-invalid');
+    });
+    $('#repassword').on("input", function () {
+        $('#repassword').removeClass('is-invalid');
+    });
+    $('#password').on("input", function () {
+        $('#password').removeClass('is-invalid');
+    });
+});
+</script>
+}
